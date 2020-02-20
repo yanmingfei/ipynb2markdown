@@ -6,7 +6,6 @@ const parse = function (res) {
 
     let str = ''
     obj.cells.forEach((item, index) => {
-
         // str += item.source+'\n'
         if (isArray(item.source)) {
             if (item.cell_type === 'code') {
@@ -30,7 +29,13 @@ const parse = function (res) {
             }
             str+='\n'
         } else {
-            str += item.source + '\n'
+            if(item.cell_type==='code'){
+                str+= '\n```\n'
+                str += item.source + '\n'
+                str+= '\n```\n'
+            }else{
+                str += item.source + '\n'
+            }
         }
 
         if(isArray(item.outputs)){
@@ -57,9 +62,23 @@ const parse = function (res) {
                     str+='\n```\n'
                 }
                 if(it.output_type==='display_data'||(it.data&&it.data['image/png'])) {
-                    str += '\n'
-                    str += '![](data:image/png;base64,' + it.data['image/png'].replace(/\n/gi, '') + ')';
-                    str += '\n'
+                    if(it.data['image/png']){
+                        str += '\n'
+                        str += '![](data:image/png;base64,' + it.data['image/png'].replace(/\n/gi, '') + ')';
+                        str += '\n'
+                    }
+                    if(it.data['text/latex']){
+                        str+= '\n'
+                        if(isArray(it.data['text/latex'])){
+                            it.data['text/latex'].forEach(k=>{
+                                str+=k
+                            })
+                        }else{
+                            str+= it.data['text/latex']
+                        }
+                        str+= '\n'
+                    }
+
                 }
                 str += '\n'
             })
