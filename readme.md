@@ -15,3 +15,6 @@ ipynb2markdown(ipynbstr)
 
 ### v1.0.4
 修复ipynb转markdown，内容为字符串解析失败。
+
+### v1.0.5
+添加github地址

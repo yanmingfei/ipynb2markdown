@@ -1,12 +1,16 @@
 {
   "name": "ipynb2markdown",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yanmingfei/ipynb2markdown.git"
+  },
   "author": "",
   "license": "ISC"
 }
