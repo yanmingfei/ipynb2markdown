@@ -5,88 +5,88 @@ const parse = function (res) {
     const obj = JSON.parse(res);
 
     let str = ''
-    obj.cells.forEach((item, index) => {
-        // str += item.source+'\n'
-        if (isArray(item.source)) {
-            if (item.cell_type === 'code') {
-                str += '\n```python\n'
-                item.source.forEach((it, id) => {
-                    if (/(<pre>|<\/pre)/.test(it)) {
-                        str += '```\n'
-                    } else {
-                        str += it;
-                    }
-                })
-                str += '\n```\n'
-            } else {
-                item.source.forEach((it, id) => {
-                    if (/(<pre>|<\/pre)/.test(it)) {
-                        str += '```\n'
-                    } else {
-                        str += it;
-                    }
-                })
-            }
-            str+='\n'
-        } else {
-            if(item.cell_type==='code'){
-                str+= '\n```\n'
-                str += item.source + '\n'
-                str+= '\n```\n'
-            }else{
-                str += item.source + '\n'
-            }
-        }
 
-        if(isArray(item.outputs)){
-            item.outputs.forEach(it=>{
-                str += '\n'
-                if(it.output_type==='execute_result'){
-                    if(it.data['text/html']&&it.data['text/plain']){
-                        it.data['text/html'].forEach(myitem=>{
-                            str+= myitem
-                        })
-                    }else if(it.data['text/plain']){
-                        str+='```\n'
-                        it.data['text/plain'].forEach(myitem=>{
-                            str+= myitem
-                        })
-                        str+='\n```\n'
-                    }
-                }
-                if(it.output_type==='stream'){
-                    str+='```\n'
-                    it.text.forEach(myitem=>{
-                        str+= myitem
-                    })
-                    str+='\n```\n'
-                }
-                if(it.output_type==='display_data'||(it.data&&it.data['image/png'])) {
-                    if(it.data['image/png']){
-                        str += '\n'
-                        str += '![](data:image/png;base64,' + it.data['image/png'].replace(/\n/gi, '') + ')';
-                        str += '\n'
-                    }
-                    if(it.data['text/latex']){
-                        str+= '\n'
-                        if(isArray(it.data['text/latex'])){
-                            it.data['text/latex'].forEach(k=>{
-                                str+=k
-                            })
-                        }else{
-                            str+= it.data['text/latex']
+    const cells = obj.cells;
+
+
+    cells.forEach(cell=>{
+        //cell type判断
+
+        if(cell.cell_type==='markdown'){
+            str+= transformStr(cell.source)
+        }
+        else if(cell.cell_type==='code'){
+            str += transfromCode(cell.source,'python')
+            if(cell.outputs.length>0){
+                cell.outputs.forEach(output=>{
+                    if(output.data){
+                        let keys = Object.keys(output.data);
+                        if(keys.indexOf('text/html')!==-1 && keys.indexOf('text/plain')!==-1){
+                            keys.splice(keys.indexOf('text/plain'),1)
                         }
-                        str+= '\n'
+                        keys.forEach(key=>{
+                            if(key==='text/html'){
+                                str+= transformStr(output.data['text/html'])
+                            }else if(key==='text/plain'){
+                                str+= transfromCode(output.data['text/plain'])
+                            }else if(key==='image/png'){
+                                str += '\n![](data:image/png;base64,' + output.data['image/png'].replace(/\n/gi, '') + ')\n';
+                            }else if(key==='text/latex'){
+                                str += transformStr(output.data['text/latex'],'latex')
+                            }
+                        })
+                    }else if(output.output_type){
+                        if(output.output_type==='stream'){
+                            if(output.text){
+                                str+=transfromCode(output.text)
+                            }
+                        }
                     }
 
-                }
-                str += '\n'
-            })
+                })
+            }
+        }else if(cell.cell_type === 'raw'){
+            str+= transformStr(cell.source)
         }
-
-
-
     })
+    return str;
+}
+function transformStr(data){
+    let str = ''
+    if(isArray(data)){
+        str+='\n'+data.join('')+'\n'
+
+    }else{
+        str+='\n'+data+'\n'
+    }
+    return str;
+}
+
+function transfromCode(data,language='',sign){
+    let str = ''
+    if(isArray(data)){
+        if(/%%latex/gi.test(data[0])){
+            str+='\n```latex\n'+data.join('')+'\n```\n'
+        }else if(/^<matplotlib\.figure\.Figure/.test(data[0])){
+            str+='\n\n'
+        }
+        else if(/^<IPython/gi.test(data[0])){
+            str+='\n\n'
+        }
+        else {
+            str+='\n```'+language+'\n'+data.join('')+'\n```\n'
+        }
+    }else{
+        if(/%%latex/.test(data)){
+            str+='\n```latex\n'+ data +'\n```\n'
+        }else if(/^<matplotlib\.figure\.Figure/.test(data)){
+            str+='\n\n'
+        }else if(/^<IPython/gi.test(data)){
+            str+='\n\n'
+        }else{
+            str+='\n```'+language+'\n'+ data +'\n```\n'
+        }
+    }
     return str;
 }
 

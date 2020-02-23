@@ -12,3 +12,6 @@ ipynb2markdown(ipynbstr)
 
 ### v1.0.3
 之前source字符只支持array中cell_type是code类型。source也可以是字符串，cell_type是code。已修复
+
+### v1.0.4
+修复ipynb转markdown，内容为字符串解析失败。
